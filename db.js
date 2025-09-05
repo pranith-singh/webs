@@ -7,7 +7,7 @@ const config = {
   database: process.env.AZURE_SQL_DATABASE,
   port: parseInt(process.env.AZURE_SQL_PORT) || 1433,
   options: {
-    encrypt: true, // required for Azure SQL
+    encrypt: true,
     trustServerCertificate: false
   }
 };
@@ -25,4 +25,20 @@ async function getUsers() {
   }
 }
 
-module.exports = { getUsers };
+async function addUser(name, email) {
+  try {
+    let pool = await sql.connect(config);
+    let result = await pool
+      .request()
+      .input("Name", sql.NVarChar, name)
+      .input("Email", sql.NVarChar, email)
+      .query("INSERT INTO Users (Name, Email) VALUES (@Name, @Email); SELECT SCOPE_IDENTITY() AS Id;");
+    return { Id: result.recordset[0].Id, Name: name, Email: email };
+  } catch (err) {
+    console.error("Insert error:", err);
+    throw err;
+  }
+}
+
+module.exports = { getUsers, addUser };
+
