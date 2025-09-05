@@ -7,7 +7,7 @@ const config = {
   database: process.env.AZURE_SQL_DATABASE,
   port: parseInt(process.env.AZURE_SQL_PORT) || 1433,
   options: {
-    encrypt: true, // required for Azure
+    encrypt: true, // required for Azure SQL
     trustServerCertificate: false
   }
 };
@@ -15,7 +15,9 @@ const config = {
 async function getUsers() {
   try {
     let pool = await sql.connect(config);
-    let result = await pool.request().query("SELECT TOP 5 name FROM sys.databases");
+    let result = await pool.request().query(
+      "SELECT TOP 10 Id, Name, Email FROM Users ORDER BY Id DESC"
+    );
     return result.recordset;
   } catch (err) {
     console.error("Database error:", err);
