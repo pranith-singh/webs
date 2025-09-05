@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Azure SQL User App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    form { margin-bottom: 20px; }
+    input { padding: 8px; margin: 5px; }
+    button { padding: 8px 12px; }
+    .user { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>Azure SQL User App</h1>
+  
+  <h2>Add User</h2>
+  <form id="userForm">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <button type="submit">Add</button>
+  </form>
+
+  <h2>Users</h2>
+  <div id="users"></div>
+
+  <script>
+    async function loadUsers() {
+      const res = await fetch("/db");
+      const users = await res.json();
+      const container = document.getElementById("users");
+      container.innerHTML = "";
+      users.forEach(u => {
+        const div = document.createElement("div");
+        div.className = "user";
+        div.textContent = `${u.Name} (${u.Email})`;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("userForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      await fetch("/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email })
+      });
+      document.getElementById("name").value = "";
+      document.getElementById("email").value = "";
+      loadUsers();
+    });
+
+    loadUsers();
+  </script>
+</body>
+</html>
