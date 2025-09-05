@@ -1,59 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Azure SQL User App</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #333; }
-    form { margin-bottom: 20px; }
-    input { padding: 8px; margin: 5px; }
-    button { padding: 8px 12px; }
-    .user { margin: 5px 0; }
-  </style>
+<meta charset="UTF-8" />
+<title>Azure SQL User App v2</title>
+<style>
+  body { font-family: Arial; margin: 20px; }
+  input, button { padding: 8px; margin: 5px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  .message { margin: 10px 0; }
+</style>
 </head>
 <body>
-  <h1>Azure SQL User App</h1>
-  
-  <h2>Add User</h2>
-  <form id="userForm">
-    <input type="text" id="name" placeholder="Name" required />
-    <input type="email" id="email" placeholder="Email" required />
-    <button type="submit">Add</button>
-  </form>
 
-  <h2>Users</h2>
-  <div id="users"></div>
+<h1>Azure SQL User App v2</h1>
 
-  <script>
-    async function loadUsers() {
-      const res = await fetch("/db");
-      const users = await res.json();
-      const container = document.getElementById("users");
-      container.innerHTML = "";
-      users.forEach(u => {
-        const div = document.createElement("div");
-        div.className = "user";
-        div.textContent = `${u.Name} (${u.Email})`;
-        container.appendChild(div);
-      });
-    }
+<h2>Add / Edit User</h2>
+<form id="userForm">
+  <input type="hidden" id="userId" />
+  <input type="text" id="name" placeholder="Name" required />
+  <input type="email" id="email" placeholder="Email" required />
+  <button type="submit">Save</button>
+</form>
+<p class="message" id="message"></p>
 
-    document.getElementById("userForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      await fetch("/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email })
-      });
-      document.getElementById("name").value = "";
-      document.getElementById("email").value = "";
-      loadUsers();
-    });
+<h2>Users</h2>
+<table>
+  <thead>
+    <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
+  </thead>
+  <tbody id="users"></tbody>
+</table>
 
+<script>
+const msg = document.getElementById("message");
+const usersTable = document.getElementById("users");
+
+async function loadUsers() {
+  const res = await fetch("/db");
+  const users = await res.json();
+  usersTable.innerHTML = "";
+  users.forEach(u => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${u.Name}</td>
+      <td>${u.Email}</td>
+      <td>
+        <button onclick="editUser(${u.Id}, '${u.Name}', '${u.Email}')">Edit</button>
+        <button onclick="deleteUser(${u.Id})">Delete</button>
+      </td>
+    `;
+    usersTable.appendChild(row);
+  });
+}
+
+function editUser(id, name, email) {
+  document.getElementById("userId").value = id;
+  document.getElementById("name").value = name;
+  document.getElementById("email").value = email;
+}
+
+async function deleteUser(id) {
+  if (!confirm("Are you sure?")) return;
+  const res = await fetch(`/users/${id}`, { method: "DELETE" });
+  if (res.ok) {
+    msg.textContent = "✅ User deleted";
+    msg.style.color = "green";
     loadUsers();
-  </script>
+  } else {
+    msg.textContent = "❌ Failed to delete user";
+    msg.style.color = "red";
+  }
+}
+
+document.getElementById("userForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = document.getElementById("userId").value;
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+
+  if (!name || !email) {
+    msg.textContent = "⚠️ Both fields are required";
+    msg.style.color = "red";
+    return;
+  }
+
+  let res;
+  if (id) {
+    res = await fetch(`/users/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email })
+    });
+  } else {
+    res = await fetch("/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email })
+    });
+  }
+
+  if (res.ok) {
+    msg.textContent = id ? "✅ User updated" : "✅ User added";
+    msg.style.color = "green";
+    document.getElementById("userId").value = "";
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+    loadUsers();
+  } else {
+    const text = await res.text();
+    msg.textContent = "❌ " + text;
+    msg.style.color = "red";
+  }
+});
+
+loadUsers();
+</script>
 </body>
 </html>
+
