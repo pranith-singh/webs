@@ -1,47 +1,76 @@
-<!DOCTYPE html><html lang="en"><head>
-  <meta charset="UTF-8" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Azure SQL User App</title>
-  <style>body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #333; }
-    form { margin-bottom: 20px; }
-    input { padding: 8px; margin: 5px; }
-    button { padding: 8px 12px; }
-    .user { margin: 5px 0; }
-  </style></head><body>
-  <h1>Azure SQL User App</h1>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div class="container py-5">
+    <div class="card shadow-lg rounded-4">
+      <div class="card-body">
+        <h1 class="text-center text-primary mb-4">🚀 Azure SQL User App</h1>
+        
+        <!-- Form -->
+        <form id="userForm" class="row g-3 mb-4">
+          <div class="col-md-5">
+            <input type="text" id="name" class="form-control" placeholder="Enter Name" required>
+          </div>
+          <div class="col-md-5">
+            <input type="email" id="email" class="form-control" placeholder="Enter Email" required>
+          </div>
+          <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-success">➕ Add</button>
+          </div>
+        </form>
+
+        <hr>
+
+        <!-- Users List -->
+        <h3 class="text-secondary">👥 Users</h3>
+        <ul id="userList" class="list-group list-group-flush"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   
-  <h2>Add User</h2>
-  <form id="userForm">
-    <input type="text" id="name" placeholder="Name" required />
-    <input type="email" id="email" placeholder="Email" required />
-    <button type="submit">Add</button>
-  </form>
-  <h2>Users</h2>
-  <div id="users"></div>
-  <script>async function loadUsers() {
-      const res = await fetch("/db");
+  <script>
+    async function loadUsers() {
+      const res = await fetch('/db');
       const users = await res.json();
-      const container = document.getElementById("users");
-      container.innerHTML = "";
+      const list = document.getElementById('userList');
+      list.innerHTML = '';
       users.forEach(u => {
-        const div = document.createElement("div");
-        div.className = "user";
-        div.textContent = `${u.Name} (${u.Email})`;
-        container.appendChild(div);
+        const li = document.createElement('li');
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.innerHTML = `<span><b>${u.Name}</b> (${u.Email})</span> <span class="badge bg-primary">ID: ${u.Id}</span>`;
+        list.appendChild(li);
       });
     }
-    document.getElementById("userForm").addEventListener("submit", async e => {
+
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      await fetch("/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+
+      await fetch('/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email })
       });
-      document.getElementById("name").value = "";
-      document.getElementById("email").value = "";
+
+      document.getElementById('name').value = '';
+      document.getElementById('email').value = '';
       loadUsers();
     });
+
     loadUsers();
-  </script></body></html>
+  </script>
+</body>
+</html>
+
