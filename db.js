@@ -1,48 +1,58 @@
 const sql = require("mssql");
 
-// Configure your DB connection
 const config = {
-  user: "YOUR_DB_USER",
-  password: "YOUR_DB_PASSWORD",
-  server: "YOUR_DB_SERVER",
-  database: "YOUR_DB_NAME",
+  user: process.env.AZURE_SQL_USERNAME,
+  password: process.env.AZURE_SQL_PASSWORD,
+  server: process.env.AZURE_SQL_SERVER,
+  database: process.env.AZURE_SQL_DATABASE,
+  port: parseInt(process.env.AZURE_SQL_PORT) || 1433,
   options: {
-    encrypt: true, // for Azure
-    trustServerCertificate: true,
-  },
+    encrypt: true,
+    trustServerCertificate: false
+  }
 };
 
-// Get all users
+// Get users (include new fields)
 async function getUsers() {
   try {
-    const pool = await sql.connect(config);
-    const result = await pool.request().query("SELECT * FROM Users ORDER BY Id DESC");
+    let pool = await sql.connect(config);
+    let result = await pool.request().query(
+      `SELECT TOP 10 Id, Name, Email, Phone, City, Role 
+       FROM Users ORDER BY Id DESC`
+    );
     return result.recordset;
   } catch (err) {
-    console.error(err);
+    console.error("Database error:", err);
     throw err;
   }
 }
 
-// Add user with avatar support
-async function addUser(name, email, phone, city, role, avatar) {
+// Add user with new fields
+async function addUser(name, email, phone, city, role) {
   try {
-    const pool = await sql.connect(config);
-    const result = await pool.request()
+    let pool = await sql.connect(config);
+    let result = await pool
+      .request()
       .input("Name", sql.NVarChar, name)
       .input("Email", sql.NVarChar, email)
       .input("Phone", sql.NVarChar, phone || null)
       .input("City", sql.NVarChar, city || null)
       .input("Role", sql.NVarChar, role || null)
-      .input("Avatar", sql.NVarChar, avatar || null)
       .query(`
-        INSERT INTO Users (Name, Email, Phone, City, Role, Avatar)
-        VALUES (@Name, @Email, @Phone, @City, @Role, @Avatar);
-        SELECT * FROM Users WHERE Id = SCOPE_IDENTITY();
+        INSERT INTO Users (Name, Email, Phone, City, Role)
+        VALUES (@Name, @Email, @Phone, @City, @Role);
+        SELECT SCOPE_IDENTITY() AS Id;
       `);
-    return result.recordset[0];
+    return {
+      Id: result.recordset[0].Id,
+      Name: name,
+      Email: email,
+      Phone: phone,
+      City: city,
+      Role: role
+    };
   } catch (err) {
-    console.error(err);
+    console.error("Insert error:", err);
     throw err;
   }
 }
