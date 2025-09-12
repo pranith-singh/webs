@@ -1,243 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Futuristic Azure Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Azure Dashboard</title>
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Animate.css -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Animate.css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <style>
-    body {
-      background: radial-gradient(circle at 20% 20%, #0f0c29, #302b63, #24243e);
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      padding: 30px;
-    }
+<style>
+  body {
+    background: radial-gradient(circle at 30% 30%, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding: 30px;
+    perspective: 1500px; /* Enable 3D for hover effects */
+    overflow-x: hidden;
+  }
 
-    h1, h3 {
-      text-shadow: 0 0 10px rgba(255,255,255,0.2), 0 0 20px rgba(0,255,255,0.3);
-    }
+  h1, h3 {
+    text-shadow: 0 0 10px rgba(255,255,255,0.2), 0 0 20px rgba(0,255,255,0.3);
+  }
 
-    .card {
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      transition: 0.4s;
-    }
+  /* Glass 3D cards */
+  .card {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    transform-style: preserve-3d;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
 
-    .card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 40px rgba(0,255,255,0.4);
-    }
+  .card:hover {
+    transform: rotateY(10deg) rotateX(5deg) translateZ(30px);
+    box-shadow: 0 25px 60px rgba(0,255,255,0.5);
+  }
 
-    .form-control {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: #fff;
-    }
+  .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+  }
 
-    .form-control::placeholder {
-      color: rgba(255,255,255,0.6);
-    }
+  .form-control::placeholder {
+    color: rgba(255,255,255,0.6);
+  }
 
-    .btn-success {
-      background: linear-gradient(90deg, #00ffea, #0066ff);
-      border: none;
-      color: #000;
-      font-weight: bold;
-      text-transform: uppercase;
-      transition: 0.3s;
-    }
+  .btn-success {
+    background: linear-gradient(90deg, #00ffea, #0066ff);
+    border: none;
+    color: #000;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: 0.3s;
+  }
 
-    .btn-success:hover {
-      background: linear-gradient(90deg, #0066ff, #00ffea);
-      color: #fff;
-      transform: scale(1.05);
-    }
+  .btn-success:hover {
+    background: linear-gradient(90deg, #0066ff, #00ffea);
+    color: #fff;
+    transform: scale(1.05);
+  }
 
-    #usersTable th {
-      background: linear-gradient(90deg, #00ffea, #0066ff);
-      color: #000;
-    }
+  #usersTable th {
+    background: linear-gradient(90deg, #00ffea, #0066ff);
+    color: #000;
+  }
 
-    #usersTable td {
-      transition: 0.3s;
-    }
+  #usersTable td {
+    transition: 0.3s transform, 0.3s background;
+  }
 
-    #usersTable tbody tr:hover {
-      background: rgba(0,255,255,0.1);
-      transform: scale(1.02);
-    }
+  #usersTable tbody tr:hover {
+    transform: rotateY(5deg) translateZ(15px);
+    background: rgba(0,255,255,0.1);
+  }
 
-    canvas {
-      max-height: 400px;
-    }
+  canvas {
+    max-height: 400px;
+  }
 
-    .alert {
-      backdrop-filter: blur(5px);
-      border-radius: 10px;
-      font-weight: bold;
-    }
+  .alert {
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    font-weight: bold;
+  }
 
-  </style>
+  /* Floating neon particles */
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #00ffff;
+    border-radius: 50%;
+    animation: float 10s linear infinite;
+    opacity: 0.6;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0) translateX(0); opacity:0.6; }
+    50% { transform: translateY(-500px) translateX(100px); opacity:1; }
+    100% { transform: translateY(-1000px) translateX(0); opacity:0.6; }
+  }
+</style>
 </head>
 <body>
-  <div class="container">
 
-    <!-- Header -->
-    <h1 class="text-center mb-4 animate__animated animate__fadeInDown">
-      🌌 Futuristic Azure Dashboard
-    </h1>
+<!-- Floating particles -->
+<div id="particles"></div>
 
-    <div class="row g-4">
-      <!-- Form -->
-      <div class="col-md-6">
-        <div class="card shadow-lg animate__animated animate__fadeInLeft">
-          <div class="card-body">
-            <h3 class="mb-3">➕ Add User</h3>
-            <form id="userForm" class="row g-3">
-              <div class="col-md-6"><input type="text" id="name" class="form-control" placeholder="Full Name" required></div>
-              <div class="col-md-6"><input type="email" id="email" class="form-control" placeholder="Email" required></div>
-              <div class="col-md-6"><input type="text" id="phone" class="form-control" placeholder="Phone"></div>
-              <div class="col-md-6"><input type="text" id="city" class="form-control" placeholder="City"></div>
-              <div class="col-md-12"><input type="text" id="role" class="form-control" placeholder="Role / Job Title"></div>
-              <div class="col-md-12 d-grid">
-                <button type="submit" class="btn btn-success">Save User</button>
-              </div>
-            </form>
-            <div id="messageArea" class="mt-3"></div>
-          </div>
-        </div>
-      </div>
+<div class="container">
 
-      <!-- Users Table -->
-      <div class="col-md-6">
-        <div class="card shadow-lg animate__animated animate__fadeInRight">
-          <div class="card-body">
-            <h3 class="mb-3">📋 Users</h3>
-            <div class="table-responsive">
-              <table class="table table-striped table-hover" id="usersTable">
-                <thead>
-                  <tr>
-                    <th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Role</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+  <!-- Header -->
+  <h1 class="text-center mb-4 animate__animated animate__fadeInDown">🚀 User Dashboard</h1>
+
+  <div class="row g-4">
+    <!-- Form -->
+    <div class="col-md-6">
+      <div class="card shadow-lg animate__animated animate__fadeInLeft">
+        <div class="card-body">
+          <h3 class="mb-3">➕ Add User</h3>
+          <form id="userForm" class="row g-3">
+            <div class="col-md-6"><input type="text" id="name" class="form-control" placeholder="Full Name" required></div>
+            <div class="col-md-6"><input type="email" id="email" class="form-control" placeholder="Email" required></div>
+            <div class="col-md-6"><input type="text" id="phone" class="form-control" placeholder="Phone"></div>
+            <div class="col-md-6"><input type="text" id="city" class="form-control" placeholder="City"></div>
+            <div class="col-md-12"><input type="text" id="role" class="form-control" placeholder="Role / Job Title"></div>
+            <div class="col-md-12 d-grid">
+              <button type="submit" class="btn btn-success">Save User</button>
             </div>
-          </div>
+          </form>
+          <div id="messageArea" class="mt-3"></div>
         </div>
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="card shadow-lg mt-4 animate__animated animate__fadeInUp">
-      <div class="card-body">
-        <h3 class="mb-3">📊 Roles Distribution</h3>
-        <canvas id="rolesChart"></canvas>
+    <!-- Users Table -->
+    <div class="col-md-6">
+      <div class="card shadow-lg animate__animated animate__fadeInRight">
+        <div class="card-body">
+          <h3 class="mb-3">📋 Users</h3>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover" id="usersTable">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Role</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart -->
+  <div class="card shadow-lg mt-4 animate__animated animate__fadeInUp">
+    <div class="card-body">
+      <h3 class="mb-3">📊 Roles Distribution</h3>
+      <canvas id="rolesChart"></canvas>
+    </div>
+  </div>
 
-  <script>
-    const form = document.getElementById("userForm");
-    const msgArea = document.getElementById("messageArea");
-    const usersTableBody = document.querySelector("#usersTable tbody");
-    let rolesChart;
+</div>
 
-    async function loadUsers() {
-      const res = await fetch("/db");
-      const users = await res.json();
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-      // Table
-      usersTableBody.innerHTML = "";
-      users.forEach(u => {
-        const row = `<tr class="animate__animated animate__fadeIn">
-          <td>${u.Id}</td><td>${u.Name}</td><td>${u.Email}</td>
-          <td>${u.Phone || ""}</td><td>${u.City || ""}</td><td>${u.Role || ""}</td>
-        </tr>`;
-        usersTableBody.innerHTML += row;
-      });
+<script>
+  // Create floating particles
+  const particlesContainer = document.getElementById('particles');
+  for(let i=0;i<50;i++){
+    const p = document.createElement('div');
+    p.classList.add('particle');
+    p.style.left = Math.random()*window.innerWidth+'px';
+    p.style.top = Math.random()*window.innerHeight+'px';
+    p.style.animationDuration = 5+Math.random()*10+'s';
+    particlesContainer.appendChild(p);
+  }
 
-      updateChart(users);
-    }
+  const form = document.getElementById("userForm");
+  const msgArea = document.getElementById("messageArea");
+  const usersTableBody = document.querySelector("#usersTable tbody");
+  let rolesChart;
 
-    function updateChart(users) {
-      const counts = {};
-      users.forEach(u => counts[u.Role || "Unknown"] = (counts[u.Role || "Unknown"] || 0) + 1);
+  async function loadUsers() {
+    const res = await fetch("/db");
+    const users = await res.json();
 
-      const ctx = document.getElementById("rolesChart").getContext("2d");
-      if (rolesChart) rolesChart.destroy();
-
-      const gradientColors = [
-        ctx.createLinearGradient(0,0,0,400),
-        ctx.createLinearGradient(0,0,400,0),
-        ctx.createLinearGradient(0,400,400,0),
-        ctx.createLinearGradient(0,0,0,400),
-        ctx.createLinearGradient(400,0,0,0)
-      ];
-      gradientColors[0].addColorStop(0,'#00ffff'); gradientColors[0].addColorStop(1,'#0066ff');
-      gradientColors[1].addColorStop(0,'#ff00ff'); gradientColors[1].addColorStop(1,'#ff6600');
-      gradientColors[2].addColorStop(0,'#00ff00'); gradientColors[2].addColorStop(1,'#00aa00');
-      gradientColors[3].addColorStop(0,'#ffff00'); gradientColors[3].addColorStop(1,'#ffaa00');
-      gradientColors[4].addColorStop(0,'#ff0000'); gradientColors[4].addColorStop(1,'#660000');
-
-      rolesChart = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: Object.keys(counts),
-          datasets: [{
-            data: Object.values(counts),
-            backgroundColor: gradientColors
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { labels: { color: '#fff', font: { size: 14, weight: 'bold' } } }
-          }
-        }
-      });
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
-        city: document.getElementById("city").value,
-        role: document.getElementById("role").value
-      };
-
-      const res = await fetch("/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(user)
-      });
-
-      msgArea.innerHTML = "";
-      if (res.ok) {
-        msgArea.innerHTML = `<div class="alert alert-success animate__animated animate__fadeIn">✅ User saved!</div>`;
-        form.reset();
-        loadUsers();
-      } else {
-        msgArea.innerHTML = `<div class="alert alert-danger animate__animated animate__fadeIn">❌ Failed to save user</div>`;
-      }
-      setTimeout(() => msgArea.innerHTML = "", 3000);
+    // Table
+    usersTableBody.innerHTML = "";
+    users.forEach(u => {
+      const row = `<tr class="animate__animated animate__fadeIn">
+        <td>${u.Id}</td><td>${u.Name}</td><td>${u.Email}</td>
+        <td>${u.Phone || ""}</td><td>${u.City || ""}</td><td>${u.Role || ""}</td>
+      </tr>`;
+      usersTableBody.innerHTML += row;
     });
 
-    loadUsers();
-  </script>
+    updateChart(users);
+  }
+
+  function updateChart(users) {
+    const counts = {};
+    users.forEach(u => counts[u.Role || "Unknown"] = (counts[u.Role || "Unknown"] || 0) + 1);
+
+    const ctx = document.getElementById("rolesChart").getContext("2d");
+    if (rolesChart) rolesChart.destroy();
+
+    const gradientColors = [
+      ctx.createLinearGradient(0,0,0,400),
+      ctx.createLinearGradient(0,0,400,0),
+      ctx.createLinearGradient(0,400,400,0),
+      ctx.createLinearGradient(0,0,0,400),
+      ctx.createLinearGradient(400,0,0,0)
+    ];
+    gradientColors[0].addColorStop(0,'#00ffff'); gradientColors[0].addColorStop(1,'#0066ff');
+    gradientColors[1].addColorStop(0,'#ff00ff'); gradientColors[1].addColorStop(1,'#ff6600');
+    gradientColors[2].addColorStop(0,'#00ff00'); gradientColors[2].addColorStop(1,'#00aa00');
+    gradientColors[3].addColorStop(0,'#ffff00'); gradientColors[3].addColorStop(1,'#ffaa00');
+    gradientColors[4].addColorStop(0,'#ff0000'); gradientColors[4].addColorStop(1,'#660000');
+
+    rolesChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: Object.keys(counts),
+        datasets: [{
+          data: Object.values(counts),
+          backgroundColor: gradientColors
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: '#fff', font: { size: 14, weight: 'bold' } } }
+        }
+      }
+    });
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const user = {
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      phone: document.getElementById("phone").value,
+      city: document.getElementById("city").value,
+      role: document.getElementById("role").value
+    };
+
+    const res = await fetch("/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user)
+    });
+
+    msgArea.innerHTML = "";
+    if (res.ok) {
+      msgArea.innerHTML = `<div class="alert alert-success animate__animated animate__fadeIn">✅ User saved!</div>`;
+      form.reset();
+      loadUsers();
+    } else {
+      msgArea.innerHTML = `<div class="alert alert-danger animate__animated animate__fadeIn">❌ Failed to save user</div>`;
+    }
+    setTimeout(() => msgArea.innerHTML = "", 3000);
+  });
+
+  loadUsers();
+</script>
+
 </body>
 </html>
