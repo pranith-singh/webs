@@ -31,7 +31,8 @@
     .container { position: relative; z-index: 1; }
     .card { transition: transform 0.3s, box-shadow 0.3s; }
     .card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .list-group-item:hover { background: #f0f9ff; transform: scale(1.02); }
+    .btn-success { transition: transform 0.2s ease; }
+    .btn-success:hover { transform: scale(1.05); }
   </style>
 </head>
 
@@ -65,11 +66,9 @@
           </div>
         </form>
 
-        <hr>
+        <!-- Placeholder for messages -->
+        <div id="messageArea"></div>
 
-        <!-- Users List -->
-        <h3 class="text-secondary animate__animated animate__fadeInLeft">👥 Users</h3>
-        <ul id="userList" class="list-group list-group-flush"></ul>
       </div>
     </div>
   </div>
@@ -78,42 +77,42 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
-    async function loadUsers() {
-      const res = await fetch('/db');
-      const users = await res.json();
-      const list = document.getElementById('userList');
-      list.innerHTML = '';
-      users.forEach(u => {
-        const li = document.createElement('li');
-        li.className = "list-group-item d-flex flex-column animate__animated animate__fadeInUp";
-        li.innerHTML = `
-          <div><b>${u.Name}</b> (${u.Email})</div>
-          <small>📞 ${u.Phone || 'N/A'} | 🏙️ ${u.City || 'N/A'} | 👔 ${u.Role || 'N/A'}</small>
-          <span class="badge bg-primary mt-1">ID: ${u.Id}</span>
-        `;
-        list.appendChild(li);
-      });
-    }
-
     document.getElementById('userForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const phone = document.getElementById('phone').value;
       const city = document.getElementById('city').value;
       const role = document.getElementById('role').value;
 
-      await fetch('/users', {
+      const res = await fetch('/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, phone, city, role })
       });
 
-      document.getElementById('userForm').reset();
-      loadUsers();
-    });
+      // Show message
+      const msgArea = document.getElementById('messageArea');
+      msgArea.innerHTML = "";
+      if (res.ok) {
+        const msg = document.createElement("div");
+        msg.className = "alert alert-success animate__animated animate__fadeIn";
+        msg.innerText = "✅ User saved successfully!";
+        msgArea.appendChild(msg);
+      } else {
+        const msg = document.createElement("div");
+        msg.className = "alert alert-danger animate__animated animate__fadeIn";
+        msg.innerText = "❌ Failed to save user!";
+        msgArea.appendChild(msg);
+      }
 
-    loadUsers();
+      // Reset form
+      document.getElementById('userForm').reset();
+
+      // Remove message after 3 seconds
+      setTimeout(() => { msgArea.innerHTML = ""; }, 3000);
+    });
   </script>
 </body>
 </html>
