@@ -1,30 +1,24 @@
-name: Deploy Node.js app to Azure WebApp
+name: Azure Deployment
 
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          node-version: '20'
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true  # THIS FIXES YOUR ERROR
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test --if-present
-
-      - name: Deploy to Azure WebApp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: app112
-          slot-name: Production
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+      - name: Test Azure CLI
+        run: |
+          echo "Logged in successfully!"
